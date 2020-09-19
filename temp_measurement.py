@@ -21,7 +21,6 @@ dhtSensor = adafruit_dht.DHT22(board.D4)
 
 # TODO: Add token refreshing logic
 jwt_token = create_jwt(GCP_PROJECT_ID, PRIVATE_KEY_FILE_PATH, ENCRYPTION_ALGO).decode('ascii')  # decode again as need the string representation for the request
-print("jwt_token: ", jwt_token, "\n")
 
 headers = {
     'authorization': f'Bearer {jwt_token}',
@@ -43,6 +42,7 @@ while True:
     print(SENSOR_LOCATION_NAME + " Temperature(C)", temp_c)
     print(SENSOR_LOCATION_NAME + " Humidity(%)", humidity)
 
+    # TODO: Send payload as structured JSON so it's easier to parse on the receiving end
     encoded_temp = base64.b64encode(f"temp is {temp_c} C".encode("ascii")).decode('ascii') # decode again as need the string representation for the request
     payload = f'{{\"binary_data\": \"{encoded_temp}\"}}'
     resp = requests.post(url, headers=headers,data=payload)
