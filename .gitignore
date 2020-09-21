@@ -1,3 +1,9 @@
+# Keys for sending messages
 keys
+
+# Python envs
 venv/
 env/
+
+# IDE folders
+.idea
