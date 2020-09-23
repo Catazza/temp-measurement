@@ -5,5 +5,10 @@ keys
 venv/
 env/
 
+# Compiled Python
+__pycache__/
+*.pyc
+
 # IDE folders
 .idea
+.vscode

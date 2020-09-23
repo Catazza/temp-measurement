@@ -22,16 +22,15 @@ class IOTInterface:
         # TODO: Add token refreshing logic
         self._jwt = create_jwt(GCP_PROJECT_ID, PRIVATE_KEY_FILE_PATH, ENCRYPTION_ALGO).decode('ascii')  # decode again as need the string representation for the request
 
-    def build_iot_post_request_payload(self, temp_c: float, humidity: float):
-        encoded_temp = base64.b64encode(f"temp is {temp_c} C".encode("ascii")).decode('ascii') # decode again as need the string representation for the request
-        # TODO: Send payload as structured JSON so it's easier to parse on the receiving end
+    def build_iot_post_request_payload(self, reading: str):
+        encoded_temp = base64.b64encode(reading.encode('ascii')).decode('ascii') # decode again as need the string representation for the request
         return f'{{\"binary_data\": \"{encoded_temp}\"}}'
 
 
-    def make_request(self, temp_c, humidity):
+    def make_request(self, reading: str) -> None:
         HEADERS['authorization'] = HEADERS['authorization'].format(jwt_token=self._jwt)
         # TODO: add try/catch block
-        payload = self.build_iot_post_request_payload(temp_c, humidity)
+        payload = self.build_iot_post_request_payload(reading)
 
         resp = requests.post(URL, headers=HEADERS,data=payload)
         print(resp.text)
