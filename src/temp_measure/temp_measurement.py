@@ -6,7 +6,7 @@ import requests
 import datetime
 import json
 from src.utils.jwt import create_jwt
-from src.gcp.iot.request_builder import IOTInterface
+from src.temp_measure.gcp_iot.request_builder import IOTInterface
 
 # --------- User Settings ---------
 SECONDS_BETWEEN_READS = 10
@@ -50,3 +50,6 @@ def measure_temperature():
         iot_interface.make_request(structured_reading)
         
         time.sleep(SECONDS_BETWEEN_READS)
+
+if __name__ == "__main__":
+    measure_temperature()

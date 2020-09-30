@@ -2,7 +2,7 @@
 import base64
 import requests
 import os
-from src.utils.jwt import create_jwt
+from src.temp_measure.utils.jwt import create_jwt
 
 GCP_PROJECT_ID = 'temp-measure-dev'
 PRIVATE_KEY_FILE_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, 'keys/rsa_private.pem')
