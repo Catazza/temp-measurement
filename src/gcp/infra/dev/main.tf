@@ -24,6 +24,25 @@ provider "google" {
   zone    = "europe-west2-c"
 }
 
-resource "google_compute_network" "vpc_network" {
-  name = "terraform-network"
+resource "google_project_service" "iot_api" {
+  project = var.GCP_PROJECT_ID
+  service = "cloudiot.googleapis.com"
+
+  disable_dependent_services = true
+}
+
+resource "google_project_service" "bq_api" {
+  project = var.GCP_PROJECT_ID
+  service = "bigquery.googleapis.com"
+
+  disable_dependent_services = true
+}
+
+resource "google_bigquery_dataset" "temp_measure" {
+  dataset_id                  = "temp_measure"
+  friendly_name               = "temp_measure"
+  description                 = "This is the dataset to host the temperature measurements from the raspberry pi"
+  location                    = "EU"
+
+  depends_on = [google_project_service.bq_api]
 }
