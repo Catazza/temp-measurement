@@ -12,3 +12,6 @@ __pycache__/
 # IDE folders
 .idea
 .vscode
+
+# terraform
+.terraform
