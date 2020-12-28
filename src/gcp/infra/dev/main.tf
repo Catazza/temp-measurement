@@ -38,6 +38,20 @@ resource "google_project_service" "bq_api" {
   disable_dependent_services = true
 }
 
+resource "google_project_service" "cloud_build_api" {
+  project = var.GCP_PROJECT_ID
+  service = "cloudbuild.googleapis.com"
+
+  disable_dependent_services = true
+}
+
+resource "google_storage_bucket" "staging-gcf-db-loader" {
+  name = "staging-gcf-db-loader"
+  location = "EU"
+
+  force_destroy = true
+}
+
 resource "google_bigquery_dataset" "temp_measure" {
   dataset_id                  = "temp_measure"
   friendly_name               = "temp_measure"
