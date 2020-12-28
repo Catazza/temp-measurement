@@ -4,18 +4,23 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"azzadigital.com/tempmeasurement/cloudfunctions/dbloader"
+	"cloud.google.com/go/functions/metadata"
 	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
+	"github.com/google/uuid"
 )
 
 func main() {
 	ctx := context.Background()
-	// if err := funcframework.RegisterHTTPFunctionContext(ctx, "/", hello.HelloWorld); err != nil {
-	// log.Fatalf("funcframework.RegisterHTTPFunctionContext: %v\n", err)
-	// }
+	m := metadata.Metadata{EventID: uuid.New().String(), Timestamp: time.Now()}
+	ctxWithMetadata := metadata.NewContext(ctx, &m)
 
-	if err := funcframework.RegisterEventFunctionContext(ctx, "/", dbloader.StoreTempMeasurementBQ); err != nil {
+	t, err := metadata.FromContext(ctxWithMetadata)
+	log.Println(t, err)
+
+	if err := funcframework.RegisterEventFunctionContext(ctxWithMetadata, "/", dbloader.StoreTempMeasurementBQ); err != nil {
 		log.Fatalf("funcframework.RegisterEventFunctionContext: %v\n", err)
 	}
 

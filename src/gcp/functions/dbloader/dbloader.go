@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"os"
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"google.golang.org/api/iterator"
+	"cloud.google.com/go/functions/metadata"
 )
 
 // PubSubMessage is the payload of a Pub/Sub event.
@@ -23,28 +21,25 @@ type TempMeasurement struct {
 	Temperature            string    `json:"temperature"`
 	Humidity               string    `json:"humidity"`
 	MeasuringTime          time.Time `json:"measuring_time"`
+	DeviceMessageID        string    `json:"device_message_id"`
+	PubSubMessageID        string
 	DBLoaderProcessingTime time.Time
 }
 
-type StackOverflowRow struct {
-	URL       string `bigquery:"url"`
-	ViewCount int64  `bigquery:"view_count"`
+type bqRawTempTableRow struct {
+	PubSubMessageID string    `bigquery:"pubsub_message_id"`
+	JSONMsg         string    `bigquery:"json_msg"`
+	ProcessingTime  time.Time `bigquery:"processing_time"`
 }
 
-// printResults prints results from a query to the Stack Overflow public dataset.
-func printResults(w io.Writer, iter *bigquery.RowIterator) error {
-	for {
-		var row StackOverflowRow
-		err := iter.Next(&row)
-		if err == iterator.Done {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error iterating through results: %v", err)
-		}
-
-		fmt.Fprintf(w, "url: %s views: %d\n", row.URL, row.ViewCount)
+func retrievePubSubMessageID(ctx context.Context) string {
+	// Retrive pubSub message ID
+	ctxMetadata, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatal(err)
 	}
+	log.Printf("MSG ID: %s", ctxMetadata.EventID)
+	return ctxMetadata.EventID
 }
 
 // StoreTempMeasurementBQ consumes a Pub/Sub message.
@@ -54,8 +49,14 @@ func StoreTempMeasurementBQ(ctx context.Context, m PubSubMessage) error {
 	json.Unmarshal([]byte(pubsubPayload), &tempMeasurement)
 	log.Printf("Payload: %s", pubsubPayload)
 
-	ctxWithTimeout, cancelFunction := context.WithTimeout(ctx, time.Duration(15)*time.Second)
+	// retrieve PS message ID
+	// msgID := retrievePubSubMessageID(ctx)
 
+	// Create BQ item to save
+	bqRawItem := bqRawTempTableRow{PubSubMessageID: "11213", JSONMsg: pubsubPayload, ProcessingTime: time.Now()}
+
+	// Initialise BQ client
+	ctxWithTimeout, cancelFunction := context.WithTimeout(ctx, time.Duration(15)*time.Second)
 	client, err := bigquery.NewClient(ctxWithTimeout, "temp-measure-dev")
 	if err != nil {
 		log.Fatalf("bigquery.Newclient: %v", err)
@@ -67,25 +68,11 @@ func StoreTempMeasurementBQ(ctx context.Context, m PubSubMessage) error {
 		cancelFunction()
 	}()
 
-	// example to check if reading works
-	query := client.Query(
-		`SELECT
-                CONCAT(
-                        'https://stackoverflow.com/questions/',
-                        CAST(id as STRING)) as url,
-                view_count
-        FROM ` + "`bigquery-public-data.stackoverflow.posts_questions`" + `
-        WHERE tags like '%google-bigquery%'
-        ORDER BY view_count DESC
-        LIMIT 10;`)
-
-	results, err := query.Read(ctxWithTimeout)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := printResults(os.Stdout, results); err != nil {
-		log.Fatal(err)
+	// Save object to Bigquery
+	inserter := client.Dataset("temp_measure").Table("temp_history_raw").Inserter()
+	saveErr := inserter.Put(ctxWithTimeout, &bqRawItem)
+	if saveErr != nil {
+		log.Fatalf("Error saving item %v to BQ: %v", &bqRawItem, saveErr)
 	}
 
 	return nil
