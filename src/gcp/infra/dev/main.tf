@@ -1,3 +1,4 @@
+// ---------------     Initial setup   ---------------   
 variable "GCP_PROJECT_ID" {
     type = string
     description = "the target project where to run TF"
@@ -24,6 +25,7 @@ provider "google" {
   zone    = "europe-west2-c"
 }
 
+// ---------------   APIs  ---------------   
 resource "google_project_service" "iot_api" {
   project = var.GCP_PROJECT_ID
   service = "cloudiot.googleapis.com"
@@ -45,6 +47,7 @@ resource "google_project_service" "cloud_build_api" {
   disable_dependent_services = true
 }
 
+// ---------------   GCF terraform ---------------   
 resource "google_storage_bucket" "staging-gcf-db-loader" {
   name = "staging-gcf-db-loader"
   location = "EU"
@@ -52,6 +55,33 @@ resource "google_storage_bucket" "staging-gcf-db-loader" {
   force_destroy = true
 }
 
+resource "google_storage_bucket_object" "compressed_dbloader_func" {
+  name = "compressed_dbloader_func.zip"
+  bucket = google_storage_bucket.staging-gcf-db-loader.name
+  source = "../../functions/dbloader/compressed_dbloader_func.zip"
+}
+
+resource "google_cloudfunctions_function" "dbloader" {
+  name = "dbloader"
+  description = "function to load sensor measurements from PubSub into Bigquery"
+  runtime = "go113"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.staging-gcf-db-loader.name
+  source_archive_object = google_storage_bucket_object.compressed_dbloader_func.name
+  timeout               = 60
+  entry_point           = "StoreTempMeasurementBQ"
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource = "projects/temp-measure-dev/topics/temp-sensor-sink"
+    failure_policy {
+      retry = "true"
+    }
+  }
+}
+
+// ---------------   Bigquery storage ---------------   
 resource "google_bigquery_dataset" "temp_measure" {
   dataset_id                  = "temp_measure"
   friendly_name               = "temp_measure"

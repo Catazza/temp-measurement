@@ -16,3 +16,9 @@ __pycache__/
 # terraform
 .terraform
 .terraform.lock.hcl
+
+# Mac files 
+.DS_Store
+
+# Output files 
+*.zip
