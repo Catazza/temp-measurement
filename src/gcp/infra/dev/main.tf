@@ -48,6 +48,13 @@ resource "google_project_service" "cloud_build_api" {
 }
 
 // ---------------   GCF terraform ---------------   
+data "archive_file" "create_dbloader_zip" {
+  type = "zip"
+  output_path = "${path.module}/files/compressed_dbloader_func.zip"
+
+  source_dir = "../../functions/dbloader" // TODO: DO BETTER PATH WITH TF FUNCTIONS
+}
+
 resource "google_storage_bucket" "staging-gcf-db-loader" {
   name = "staging-gcf-db-loader"
   location = "EU"
@@ -56,9 +63,12 @@ resource "google_storage_bucket" "staging-gcf-db-loader" {
 }
 
 resource "google_storage_bucket_object" "compressed_dbloader_func" {
-  name = "compressed_dbloader_func.zip"
+  name = format("%s#%s","compressed_dbloader_func", data.archive_file.create_dbloader_zip.output_md5)
   bucket = google_storage_bucket.staging-gcf-db-loader.name
-  source = "../../functions/dbloader/compressed_dbloader_func.zip"
+  source = data.archive_file.create_dbloader_zip.output_path 
+  content_disposition = "attachment"
+  content_encoding    = "gzip"
+  content_type        = "application/zip"
 }
 
 resource "google_cloudfunctions_function" "dbloader" {
