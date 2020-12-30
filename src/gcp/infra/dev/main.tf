@@ -141,6 +141,7 @@ resource "google_bigquery_table" "temp_history_parsed" {
 
   time_partitioning {
     type = "DAY"
+    field = "processing_time"
   }
 
   depends_on = [google_bigquery_dataset.temp_measure]

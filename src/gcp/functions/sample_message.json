@@ -1,6 +1,6 @@
 {
-    "temperature": "Error in measurement, skipping this beat",
-    "humidity": "Error in measurement, skipping this beat",
+    "temperature": "-999",
+    "humidity": "-999",
     "measuring_time": "2020-09-24T19:34:34.817054Z",
     "device_message_id": "2342442"
 }

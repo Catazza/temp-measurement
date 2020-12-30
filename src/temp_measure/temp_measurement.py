@@ -19,8 +19,8 @@ def get_single_reading(dhtSensor):
         humidity = format(humidity,".2f")
     except RuntimeError as e:
         print(e)
-        temp = "Error in measurement, skipping this beat"
-        humidity = "Error in measurement, skipping this beat"
+        temp = "-999"
+        humidity = "-999"
     print("Temperature(C)", temp)
     print("Humidity(%)", humidity)
 

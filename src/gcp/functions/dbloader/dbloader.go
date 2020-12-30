@@ -17,14 +17,14 @@ type PubSubMessage struct {
 }
 
 // TempMeasurement is the struct to Unmarshal the temperature measurement
-type TempMeasurement struct {
-	Temperature            string    `json:"temperature"`
-	Humidity               string    `json:"humidity"`
-	MeasuringTime          time.Time `json:"measuring_time"`
-	DeviceMessageID        string    `json:"device_message_id"`
-	PubSubMessageID        string
-	DBLoaderProcessingTime time.Time
-}
+// type TempMeasurement struct {
+// 	Temperature            string    `json:"temperature"`
+// 	Humidity               string    `json:"humidity"`
+// 	MeasuringTime          time.Time `json:"measuring_time"`
+// 	DeviceMessageID        string    `json:"device_message_id"`
+// 	PubSubMessageID        string    `bigquery:"pubsub_message_id"`
+// 	DBLoaderProcessingTime time.Time
+// }
 
 type bqRawTempTableRow struct {
 	PubSubMessageID string    `bigquery:"pubsub_message_id"`
@@ -32,9 +32,22 @@ type bqRawTempTableRow struct {
 	ProcessingTime  time.Time `bigquery:"processing_time"`
 }
 
+type bqParsedTempTableRow struct {
+	PubSubMessageID string    `bigquery:"pubsub_message_id"`
+	ProcessingTime  time.Time `bigquery:"processing_time"`
+	DeviceMessageID string    `json:"device_message_id" bigquery:"device_message_id"`
+	Temperature     string    `json:"temperature" bigquery:"temperature"`
+	Humidity        string    `json:"humidity" bigquery:"humidity"`
+	MeasuringTime   string    `json:"measuring_time" bigquery:"measuring_time"`
+}
+
 func retrievePubSubMessageID(ctx context.Context) string {
 	// Retrive pubSub message ID
 	ctxMetadata, err := metadata.FromContext(ctx)
+	if err != nil && err.Error() == "unable to find metadata" {
+		// shortcut to test locally, to be improved to add local metadata in context
+		return "99999" // "random" ID
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,19 +57,22 @@ func retrievePubSubMessageID(ctx context.Context) string {
 
 // StoreTempMeasurementBQ consumes a Pub/Sub message.
 func StoreTempMeasurementBQ(ctx context.Context, m PubSubMessage) error {
+	// retrieve the measurement payload
 	pubsubPayload := string(m.Data) // Automatically decoded from base64.
-	tempMeasurement := TempMeasurement{}
-	json.Unmarshal([]byte(pubsubPayload), &tempMeasurement)
-	log.Printf("Payload: %s", pubsubPayload)
 
-	// retrieve PS message ID
-	// msgID := retrievePubSubMessageID(ctx)
+	// retrieve and compute attributes to set, such as the PS message ID
+	msgID := retrievePubSubMessageID(ctx)
+	processingTime := time.Now()
 
-	// Create BQ item to save
-	bqRawItem := bqRawTempTableRow{PubSubMessageID: "11213", JSONMsg: pubsubPayload, ProcessingTime: time.Now()}
+	// Create BQ items to save
+	bqRawItem := bqRawTempTableRow{PubSubMessageID: msgID, JSONMsg: pubsubPayload, ProcessingTime: processingTime}
+	bqParsedItem := bqParsedTempTableRow{}
+	json.Unmarshal([]byte(pubsubPayload), &bqParsedItem)
+	bqParsedItem.PubSubMessageID = msgID
+	bqParsedItem.ProcessingTime = processingTime
 
 	// Initialise BQ client
-	ctxWithTimeout, cancelFunction := context.WithTimeout(ctx, time.Duration(15)*time.Second)
+	ctxWithTimeout, cancelFunction := context.WithTimeout(ctx, time.Duration(200)*time.Second)
 	client, err := bigquery.NewClient(ctxWithTimeout, "temp-measure-dev")
 	if err != nil {
 		log.Fatalf("bigquery.Newclient: %v", err)
@@ -68,12 +84,19 @@ func StoreTempMeasurementBQ(ctx context.Context, m PubSubMessage) error {
 		cancelFunction()
 	}()
 
-	// Save object to Bigquery
+	// Save objects to Bigquery
+	// Raw line
 	inserter := client.Dataset("temp_measure").Table("temp_history_raw").Inserter()
-	saveErr := inserter.Put(ctxWithTimeout, &bqRawItem)
+	saveErr := inserter.Put(ctx, &bqRawItem)
 	if saveErr != nil {
-		log.Fatalf("Error saving item %v to BQ: %v", &bqRawItem, saveErr)
+		log.Fatalf("Error saving item %v to BQ table %v: %v", &bqRawItem, "temp_history_raw", saveErr)
 	}
 
+	// Parsed Line
+	inserterP := client.Dataset("temp_measure").Table("temp_history_parsed").Inserter()
+	saveErrP := inserterP.Put(ctx, &bqParsedItem)
+	if saveErrP != nil {
+		log.Fatalf("Error saving item %v to BQ table %v: %v", &bqParsedItem, "temp_history_parsed", saveErrP)
+	}
 	return nil
 }
