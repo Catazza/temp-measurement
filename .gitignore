@@ -22,3 +22,6 @@ __pycache__/
 
 # Output files 
 *.zip
+
+# Go files
+go.sum
