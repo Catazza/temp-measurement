@@ -16,16 +16,6 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
-// TempMeasurement is the struct to Unmarshal the temperature measurement
-// type TempMeasurement struct {
-// 	Temperature            string    `json:"temperature"`
-// 	Humidity               string    `json:"humidity"`
-// 	MeasuringTime          time.Time `json:"measuring_time"`
-// 	DeviceMessageID        string    `json:"device_message_id"`
-// 	PubSubMessageID        string    `bigquery:"pubsub_message_id"`
-// 	DBLoaderProcessingTime time.Time
-// }
-
 type bqRawTempTableRow struct {
 	PubSubMessageID string    `bigquery:"pubsub_message_id"`
 	JSONMsg         string    `bigquery:"json_msg"`
@@ -38,7 +28,7 @@ type bqParsedTempTableRow struct {
 	DeviceMessageID string    `json:"device_message_id" bigquery:"device_message_id"`
 	Temperature     string    `json:"temperature" bigquery:"temperature"`
 	Humidity        string    `json:"humidity" bigquery:"humidity"`
-	MeasuringTime   string    `json:"measuring_time" bigquery:"measuring_time"`
+	MeasurementTime   string    `json:"measurement_time" bigquery:"measurement_time"`
 }
 
 func retrievePubSubMessageID(ctx context.Context) string {
