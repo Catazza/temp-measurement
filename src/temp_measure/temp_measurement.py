@@ -5,8 +5,9 @@ import base64
 import requests
 import datetime
 import json
-from src.utils.jwt import create_jwt
-from src.temp_measure.gcp_iot.request_builder import IOTInterface
+import uuid
+from utils.jwt import create_jwt
+from gcp_iot.request_builder import IOTInterface
 
 # --------- User Settings ---------
 SECONDS_BETWEEN_READS = 10
@@ -32,7 +33,8 @@ def structure_reading(temp, humidity) -> str:
     json_obj = {
         'temperature': temp,
         'humidity': humidity,
-        'measurement_time': str(current_time)
+        'measurement_time': str(current_time),
+        'device_message_id': str(uuid.uuid4())
     }
     return json.dumps(json_obj)
 

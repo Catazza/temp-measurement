@@ -2,10 +2,10 @@
 import base64
 import requests
 import os
-from src.temp_measure.utils.jwt import create_jwt
+from utils.jwt import create_jwt
 
 GCP_PROJECT_ID = 'temp-measure-dev'
-PRIVATE_KEY_FILE_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, 'keys/rsa_private.pem')
+PRIVATE_KEY_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, 'keys/rsa_private.pem'))
 ENCRYPTION_ALGO = 'RS256' 
 CLOUD_REGION = 'europe-west1'
 REGISTRY_ID = 'temp-sensors'
