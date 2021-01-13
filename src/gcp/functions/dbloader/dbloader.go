@@ -28,7 +28,7 @@ type bqParsedTempTableRow struct {
 	DeviceMessageID string    `json:"device_message_id" bigquery:"device_message_id"`
 	Temperature     string    `json:"temperature" bigquery:"temperature"`
 	Humidity        string    `json:"humidity" bigquery:"humidity"`
-	MeasurementTime   string    `json:"measurement_time" bigquery:"measurement_time"`
+	MeasurementTime string    `json:"measurement_time" bigquery:"measurement_time"`
 }
 
 func retrievePubSubMessageID(ctx context.Context) string {
