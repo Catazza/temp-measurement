@@ -86,7 +86,7 @@ resource "google_cloudfunctions_function" "dbloader" {
     event_type = "google.pubsub.topic.publish"
     resource = "projects/temp-measure-dev/topics/temp-sensor-sink"
     failure_policy {
-      retry = "true"
+      retry = "false"
     }
   }
 }
@@ -171,7 +171,7 @@ resource "google_bigquery_table" "temp_history_parsed" {
     "description": "The humidity measurement"
   },
   {
-    "name": "measuring_time",
+    "name": "measurement_time",
     "type": "TIMESTAMP",
     "mode": "NULLABLE",
     "description": "The timestamp the measurement happened on the IOT device"
