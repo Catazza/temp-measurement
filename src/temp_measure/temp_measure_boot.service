@@ -1,0 +1,10 @@
+ [Unit]
+ Description=The temperature measurement service
+ After=multi-user.target
+
+ [Service]
+ Type=idle
+ ExecStart=/home/pi/Code/temp_sensor/src/temp_measure/venv/bin/python3 /home/pi/Code/temp_sensor/src/temp_measure/temp_measurement.py
+
+ [Install]
+ WantedBy=multi-user.target

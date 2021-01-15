@@ -33,4 +33,4 @@ class IOTInterface:
         payload = self.build_iot_post_request_payload(reading)
 
         resp = requests.post(URL, headers=HEADERS,data=payload)
-        print(resp.text)
+        #print(resp.text)

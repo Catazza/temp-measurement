@@ -1,6 +1,9 @@
 # Keys for sending messages
 keys
 
+# Measurement logs when ran by the pi
+logs
+
 # Python envs
 venv/
 env/
