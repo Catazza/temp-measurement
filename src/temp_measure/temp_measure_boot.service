@@ -4,7 +4,7 @@
 
  [Service]
  Type=idle
- ExecStart=/home/pi/Code/temp_sensor/src/temp_measure/venv/bin/python3 /home/pi/Code/temp_sensor/src/temp_measure/temp_measurement.py > /home/pi/Code/temp_sensor/src/temp_measure/logs/log.txt 2>&1
+ ExecStart=/home/pi/Code/temp-measurement/src/temp_measure/venv/bin/python3 /home/pi/Code/temp-measurement/src/temp_measure/temp_measurement.py &> /home/pi/Code/temp-measurement/src/temp_measure/logs/log.txt
 
  [Install]
  WantedBy=multi-user.target
