@@ -21,8 +21,7 @@ URL = f'https://cloudiotdevice.googleapis.com/v1/projects/{GCP_PROJECT_ID}/locat
 class IOTInterface:
     def __init__(self):
         # TODO: Add token refreshing logic
-        token = create_jwt(GCP_PROJECT_ID, PRIVATE_KEY_FILE_PATH, ENCRYPTION_ALGO)
-        self._jwt = token#.decode('ascii')  # decode again as need the string representation for the request
+        self._jwt = create_jwt(GCP_PROJECT_ID, PRIVATE_KEY_FILE_PATH, ENCRYPTION_ALGO)
 
     def build_iot_post_request_payload(self, reading: str):
         encoded_temp = base64.b64encode(reading.encode('ascii')).decode('ascii') # decode again as need the string representation for the request
