@@ -2,6 +2,7 @@
 import base64
 import requests
 import os
+import time
 from utils.jwt import create_jwt
 
 GCP_PROJECT_ID = 'temp-measure-dev'
@@ -32,5 +33,16 @@ class IOTInterface:
         # TODO: add try/catch block
         payload = self.build_iot_post_request_payload(reading)
 
-        resp = requests.post(URL, headers=HEADERS,data=payload)
-        #print(resp.text)
+        # Try 3 times with a sleep counter to allow full connection at startup
+        for exception_couter in range(3):
+            try: 
+                resp = requests.post(URL, headers=HEADERS,data=payload)
+                #print(resp.text)
+                break # if it gets here, request has gone through fine. TODO: use proper retries in requests module
+            except requests.exceptions.ConnectionError as e:
+                print(e)
+                time.sleep(10)
+                if exception_couter==2:
+                    raise e  # re-raise and exit
+
+        

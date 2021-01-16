@@ -20,7 +20,7 @@ def get_single_reading(dhtSensor):
         humidity = format(humidity,".2f")
         temp = format(temp, ".2f")
     except RuntimeError as e:
-        #print(e)
+        print(e)
         temp = "-999"
         humidity = "-999"
     #print("Temperature(C)", temp)
