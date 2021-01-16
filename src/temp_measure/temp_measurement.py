@@ -10,7 +10,7 @@ from utils.jwt import create_jwt
 from gcp_iot.request_builder import IOTInterface
 
 # --------- User Settings ---------
-SECONDS_BETWEEN_READS = 10
+SECONDS_BETWEEN_READS = 60
 # ---------------------------------
 
 def get_single_reading(dhtSensor):
