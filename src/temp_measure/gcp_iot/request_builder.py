@@ -11,7 +11,7 @@ ENCRYPTION_ALGO = 'RS256'
 CLOUD_REGION = 'europe-west1'
 REGISTRY_ID = 'temp-sensors'
 DEVICE_ID = 'rasp-pi-dht22'
-TOKEN_EXPIRY = 20  # token expiry in minutes
+TOKEN_EXPIRY = 600  # token expiry in minutes
 HEADERS = {
     'authorization': 'Bearer {jwt_token}',
     'content-type': 'application/json',
