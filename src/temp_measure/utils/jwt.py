@@ -1,7 +1,7 @@
 import jwt
 import datetime
 
-def create_jwt(project_id, private_key_file, algorithm):
+def create_jwt(project_id, private_key_file, algorithm, expiry):
     """Creates a JWT (https://jwt.io) to establish an MQTT connection.
         Args:
          project_id: The cloud project ID this device belongs to
@@ -20,7 +20,7 @@ def create_jwt(project_id, private_key_file, algorithm):
             # The time that the token was issued at
             'iat': datetime.datetime.utcnow(),
             # The time the token expires.
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=20),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=expiry),
             # The audience field should always be set to the GCP project id.
             'aud': project_id
     }
