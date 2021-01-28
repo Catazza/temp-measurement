@@ -90,6 +90,53 @@ resource "google_cloudfunctions_function" "dbloader" {
     }
   }
 }
+// TODO: ADD IAM FOR CLOUD FUNCTION?  
+
+// Second function
+data "archive_file" "create_tempreadings_zip" {
+  type = "zip"
+  output_path = "${path.module}/files/compressed_tempreadings_func.zip"
+
+  source_dir = "../../functions/tempreadings" // TODO: DO BETTER PATH WITH TF FUNCTIONS
+}
+
+resource "google_storage_bucket" "staging-gcf-tempreadings" {
+  name = "staging-gcf-tempreadings"
+  location = "EU"
+
+  force_destroy = true
+}
+
+resource "google_storage_bucket_object" "compressed_tempreadings_func" {
+  name = format("%s#%s","compressed_tempreadings_func", data.archive_file.create_tempreadings_zip.output_md5)
+  bucket = google_storage_bucket.staging-gcf-tempreadings.name
+  source = data.archive_file.create_tempreadings_zip.output_path 
+  content_disposition = "attachment"
+  content_encoding    = "gzip"
+  content_type        = "application/zip"
+}
+
+resource "google_cloudfunctions_function" "tempreadings" {
+  name = "tempreadings"
+  description = "function to retrieve last 100 measurements from Bigquery"
+  runtime = "go113"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.staging-gcf-tempreadings.name
+  source_archive_object = google_storage_bucket_object.compressed_tempreadings_func.name
+  timeout               = 60
+  entry_point           = "RetrieveTempreadings"
+  trigger_http = true
+}
+
+resource "google_cloudfunctions_function_iam_member" "invoker" {
+  project        = google_cloudfunctions_function.tempreadings.project
+  region         = google_cloudfunctions_function.tempreadings.region
+  cloud_function = google_cloudfunctions_function.tempreadings.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
 
 // ---------------   Bigquery storage ---------------   
 resource "google_bigquery_dataset" "temp_measure" {
